@@ -30,17 +30,24 @@ func handlerValidate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	words := strings.Split(params.Body, " ")
-	cleanedBody := ""
-	for i, word := range words {
-		switch strings.ToLower(word) {
-		case "kerfuffle", "sharbert", "fornax":
-			words[i] = "****"
-		default:
-			continue
-		}
+	badWords := map[string]struct{}{
+		"kerfuffle": {},
+		"sharbert":  {},
+		"fornax":    {},
 	}
-	cleanedBody = strings.Join(words, " ")
+
+	cleanedBody := cleanBody(params.Body, badWords)
 
 	respondWithJSON(w, http.StatusOK, returnVals{CleanedBody: cleanedBody})
+}
+
+func cleanBody(body string, badWords map[string]struct{}) string {
+	words := strings.Split(body, " ")
+	for i, word := range words {
+		if _, ok := badWords[word]; ok {
+			words[i] = "***"
+		}
+	}
+	cleaned := strings.Join(words, " ")
+	return cleaned
 }
