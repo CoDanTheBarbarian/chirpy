@@ -1,4 +1,4 @@
-module chirpy
+module github.com/CoDanTheBarbarian/chirpy
 
 go 1.23.1
 

@@ -1,13 +1,14 @@
 package main
 
 import (
-	"chirpy/internal/database"
 	"database/sql"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"sync/atomic"
+
+	"github.com/CoDanTheBarbarian/chirpy/internal/database"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -16,16 +17,24 @@ import (
 func main() {
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatal("DB_URL not set")
+	}
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 	defer db.Close()
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		log.Fatal("PLATFORM not set")
+	}
 	const filepathRoot = "."
-	const port = "8081"
+	const port = "8080"
 	apiCfg := &apiConfig{
 		fileserverHits: atomic.Int32{},
 		dbQueries:      database.New(db),
+		platform:       platform,
 	}
 
 	mux := http.NewServeMux()
@@ -34,6 +43,7 @@ func main() {
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerMetricsReset)
 	mux.HandleFunc("POST /api/validate_chirp", handlerValidate)
+	mux.HandleFunc("POST /api/users", apiCfg.handlerAddUser)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
@@ -46,6 +56,7 @@ func main() {
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	dbQueries      *database.Queries
+	platform       string
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
