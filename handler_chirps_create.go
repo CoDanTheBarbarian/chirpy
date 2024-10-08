@@ -24,9 +24,6 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 		Body   string    `json:"body"`
 		UserID uuid.UUID `json:"user_id"`
 	}
-	type response struct {
-		Chirp
-	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
 	err := decoder.Decode(&params)
@@ -50,14 +47,13 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	chirp := Chirp{
+	respondWithJSON(w, 201, Chirp{
 		ID:        dbchirp.ID,
 		CreatedAt: dbchirp.CreatedAt,
 		UpdatedAt: dbchirp.UpdatedAt,
 		Body:      dbchirp.Body,
 		UserID:    dbchirp.UserID,
-	}
-	respondWithJSON(w, 201, response{chirp})
+	})
 }
 
 func validateChirp(body string) (string, error) {
