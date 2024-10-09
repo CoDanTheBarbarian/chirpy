@@ -33,6 +33,10 @@ func main() {
 	if platform == "" {
 		log.Fatal("PLATFORM not set")
 	}
+	polkaKey := os.Getenv("POLKA_KEY")
+	if polkaKey == "" {
+		log.Fatal("POLKA_KEY not set")
+	}
 	const filepathRoot = "."
 	const port = "8080"
 	apiCfg := &apiConfig{
@@ -40,6 +44,7 @@ func main() {
 		dbQueries:      database.New(db),
 		platform:       platform,
 		jwtSecret:      secret,
+		polkaAPIKey:    polkaKey,
 	}
 
 	mux := http.NewServeMux()
@@ -71,6 +76,7 @@ type apiConfig struct {
 	dbQueries      *database.Queries
 	platform       string
 	jwtSecret      string
+	polkaAPIKey    string
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
