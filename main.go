@@ -14,6 +14,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+/*************  ✨ Codeium Command 🌟  *************/
 func main() {
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
@@ -70,6 +71,8 @@ func main() {
 	log.Printf("Serving on port: %s\n", port)
 	log.Fatal(srv.ListenAndServe())
 }
+
+/******  00300085-e311-4ce6-92c0-cfe4813e84e8  *******/
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
