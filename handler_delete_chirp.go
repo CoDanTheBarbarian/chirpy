@@ -13,7 +13,7 @@ func (cfg *apiConfig) handlerDeleteChirp(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusBadRequest, "Couldn't parse chirp ID", err)
 		return
 	}
-	chirp, err := cfg.dbQueries.GetChirp(r.Context(), chirpID)
+	dbChirp, err := cfg.dbQueries.GetChirp(r.Context(), chirpID)
 	if err != nil {
 		respondWithError(w, 404, "Chirp not found", err)
 		return
@@ -28,7 +28,7 @@ func (cfg *apiConfig) handlerDeleteChirp(w http.ResponseWriter, r *http.Request)
 		respondWithError(w, http.StatusUnauthorized, "Couldn't validate token", err)
 		return
 	}
-	if chirp.UserID != userID {
+	if dbChirp.UserID != userID {
 		respondWithError(w, http.StatusForbidden, "You can only delete your own chirps", err)
 		return
 	}
