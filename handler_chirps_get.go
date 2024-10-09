@@ -8,6 +8,11 @@ import (
 
 func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request) {
 	authorID := r.URL.Query().Get("author_id")
+	sort := r.URL.Query().Get("sort")
+	reverse := false
+	if sort == "desc" {
+		reverse = true
+	}
 	if authorID != "" {
 		userID, err := uuid.Parse(authorID)
 		if err != nil {
@@ -20,15 +25,28 @@ func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request
 			return
 		}
 		chirps := make([]Chirp, len(dbchirps))
-		for i, dbchirp := range dbchirps {
-			chirps[i] = Chirp{
-				ID:        dbchirp.ID,
-				CreatedAt: dbchirp.CreatedAt,
-				UpdatedAt: dbchirp.UpdatedAt,
-				Body:      dbchirp.Body,
-				UserID:    dbchirp.UserID,
+		if reverse {
+			for i, dbchirp := range dbchirps {
+				chirps[len(dbchirps)-i-1] = Chirp{
+					ID:        dbchirp.ID,
+					CreatedAt: dbchirp.CreatedAt,
+					UpdatedAt: dbchirp.UpdatedAt,
+					Body:      dbchirp.Body,
+					UserID:    dbchirp.UserID,
+				}
+			}
+		} else {
+			for i, dbchirp := range dbchirps {
+				chirps[i] = Chirp{
+					ID:        dbchirp.ID,
+					CreatedAt: dbchirp.CreatedAt,
+					UpdatedAt: dbchirp.UpdatedAt,
+					Body:      dbchirp.Body,
+					UserID:    dbchirp.UserID,
+				}
 			}
 		}
+
 		respondWithJSON(w, 200, chirps)
 		return
 	}
@@ -39,15 +57,28 @@ func (cfg *apiConfig) handlerGetAllChirps(w http.ResponseWriter, r *http.Request
 	}
 
 	chirps := make([]Chirp, len(dbchirps))
-	for i, dbchirp := range dbchirps {
-		chirps[i] = Chirp{
-			ID:        dbchirp.ID,
-			CreatedAt: dbchirp.CreatedAt,
-			UpdatedAt: dbchirp.UpdatedAt,
-			Body:      dbchirp.Body,
-			UserID:    dbchirp.UserID,
+	if reverse {
+		for i, dbchirp := range dbchirps {
+			chirps[len(dbchirps)-i-1] = Chirp{
+				ID:        dbchirp.ID,
+				CreatedAt: dbchirp.CreatedAt,
+				UpdatedAt: dbchirp.UpdatedAt,
+				Body:      dbchirp.Body,
+				UserID:    dbchirp.UserID,
+			}
+		}
+	} else {
+		for i, dbchirp := range dbchirps {
+			chirps[i] = Chirp{
+				ID:        dbchirp.ID,
+				CreatedAt: dbchirp.CreatedAt,
+				UpdatedAt: dbchirp.UpdatedAt,
+				Body:      dbchirp.Body,
+				UserID:    dbchirp.UserID,
+			}
 		}
 	}
+
 	respondWithJSON(w, 200, chirps)
 }
 
