@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/CoDanTheBarbarian/chirpy/internal/auth"
+	"github.com/CoDanTheBarbarian/chirpy/internal/database"
 )
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
-		Password         string `json:"password"`
-		Email            string `json:"email"`
-		ExpiresInSeconds int    `json:"expires_in_seconds,omitempty"`
+		Password string `json:"password"`
+		Email    string `json:"email"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -21,9 +21,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
 		return
 	}
-	if params.ExpiresInSeconds == 0 || params.ExpiresInSeconds > 3600 {
-		params.ExpiresInSeconds = 3600
-	}
+
 	user, err := cfg.dbQueries.GetUserByEmail(r.Context(), params.Email)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Incorrect email", err)
@@ -40,12 +38,26 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 		Email:     user.Email,
 	}
-
-	token, err := auth.MakeJWT(dbUser.ID, cfg.jwtSecret, time.Duration(params.ExpiresInSeconds)*time.Second)
+	token, err := auth.MakeJWT(dbUser.ID, cfg.jwtSecret, time.Duration(1)*time.Hour)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't generate token", err)
 		return
 	}
 	dbUser.Token = token
+	refTkn, err := auth.MakeRefreshToken()
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't generate refresh token", err)
+		return
+	}
+	refreshToken, err := cfg.dbQueries.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		Token:     refTkn,
+		UserID:    user.ID,
+		ExpiresAt: time.Now().Add(time.Duration(60 * 24 * time.Hour)),
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create refresh token", err)
+		return
+	}
+	dbUser.RefreshToken = refreshToken.Token
 	respondWithJSON(w, http.StatusOK, dbUser)
 }
